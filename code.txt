@@ -1,0 +1,19 @@
+#step 1 Create a simulator object set ns [new Simulator] #open trace files set f [open out.tr w] $ns trace-all $f
+#open Nam trace file set namfile [open out.nam w] $ns namtrace-all $namfile
+#define a finish proc proc finish {} { global ns namfile f $ns flush-trace close $f close $namfile exit 0
+}
+#create four node set n0 [$ns node] set n1 [$ns node] set n2 [$ns node] set n3 [$ns node]
+#create links between the nodes
+$ns duplex-link $n0 $n2 1Mb 10ms DropTail
+$ns duplex-link $n1 $n2 1Mb 10ms DropTail
+$ns duplex-link $n2 $n3 1Mb 10ms DropTail #create a UDP agent and attach it to node 0
+set udp [new Agent/UDP] $ns attach-agent $n0 $udp set null [new Agent/Null] $ns attach-agent $n3 $null
+$ns connect $udp $null
+#create a TCP agent and attach to node 1 set tcp [new Agent/TCP] $ns attach-agent $n1 $tcp set sink [new Agent/TCPSink] $ns attach-agent $n3 $sink
+$ns connect $tcp $sink
+#Create a CBR traffic source and attach it node0 set cbr [new Application/Traffic/CBR] $cbr attach-agent $udp
+#Create a FTP traffic source and attach it node1 set ftp [new Application/FTP] $ftp attach-agent $tcp
+#start the traffic ns at 0.5 "$cbr start" ns at 1.0 "$ftp start" ns at 4.0 "$cbr stop" ns at 4.5 "$ftp stop"
+ns at 5.0 "finish" puts "Simulator is starting...."
+#Run the simulation
+$ns run
